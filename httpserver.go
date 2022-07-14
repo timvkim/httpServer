@@ -6,7 +6,7 @@ import (
 )
 
 // create a hander struct
-type HttpHandler struct{}
+
 
 // define and initialize const with a value
 const PORT = ":8080"
