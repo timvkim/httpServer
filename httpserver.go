@@ -1,15 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/spf13/viper"
 )
 
-// create a hander struct
+// create a `HttpHanfler` struct
 type HttpHandler struct{}
-
-// define and initialize const with a value
-const PORT = ":8080"
 
 // implement `ServeHTTP` method on `HttpHandler` struct
 func (h HttpHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
@@ -21,6 +21,20 @@ func (h HttpHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	res.Write(data)
 }
 
+func initConfig() {
+	v := viper.New()
+	v.SetConfigName("config")
+	v.SetConfigType("yaml")
+	v.AddConfigPath(".")
+	v.AddConfigPath("./configs")
+
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		panic(fmt.Errorf("fatal error config file: %w", err))
+	}
+
+}
+
 func main() {
 
 	// create a new handler
@@ -29,6 +43,9 @@ func main() {
 	// log the message on starting server
 	log.Printf("Server starting on port %v\n", 8080)
 
+	initConfig()
+	port := viper.GetString(":port")
 	// listen and serve
-	http.ListenAndServe(PORT, handler)
+	http.ListenAndServe(port, handler)
+
 }
