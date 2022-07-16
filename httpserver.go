@@ -2,50 +2,56 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
-	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
-// create a `HttpHanfler` struct
-type HttpHandler struct{}
-
-// implement `ServeHTTP` method on `HttpHandler` struct
-func (h HttpHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-
-	// create response data
-	data := []byte("Hello, World!\n")
-
-	// write `data` to response
-	res.Write(data)
+type Config struct {
+	Server struct {
+		Port string `yaml:"port"`
+	} `yaml:"server"`
 }
 
-func initConfig() {
-	v := viper.New()
-	v.SetConfigName("config")
-	v.SetConfigType("yaml")
-	v.AddConfigPath(".")
-	v.AddConfigPath("./configs")
+// declare global var `c`
+var c Config
 
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
-		panic(fmt.Errorf("fatal error config file: %w", err))
+// create `initConfig` for unmarshalling .yml
+func initConfig() {
+
+	yamlFile, err := ioutil.ReadFile("./configs/config.yml")
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	err = yaml.Unmarshal(yamlFile, &c)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// create a `serveDynamic` funtcion
+func serveDynamic(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "This is the root path")
+}
+
+// create a `serveStatic` funtcion
+func serveStatic(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static.html")
 }
 
 func main() {
-
-	// create a new handler
-	handler := HttpHandler{}
+	initConfig()
 
 	// log the message on starting server
 	log.Printf("Server starting on port %v\n", 8080)
 
-	initConfig()
-	port := viper.GetString(":port")
+	http.HandleFunc("/", serveDynamic)
+	http.HandleFunc("/static", serveStatic)
+
 	// listen and serve
-	http.ListenAndServe(port, handler)
+	http.ListenAndServe(c.Server.Port, nil)
 
 }
