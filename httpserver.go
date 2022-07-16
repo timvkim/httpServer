@@ -50,6 +50,9 @@ func main() {
 
 	http.HandleFunc("/", serveDynamic)
 	http.HandleFunc("/static", serveStatic)
+	http.HandleFunc("/static/info", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "This is info page!")
+	})
 
 	// listen and serve
 	http.ListenAndServe(c.Server.Port, nil)
